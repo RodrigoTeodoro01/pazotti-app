@@ -40,7 +40,7 @@ function App() {
     return [{ username: 'admin', password: 'pazotti123', role: 'admin' }];
   });
 
-  const [cloudUrl, setCloudUrl] = useState(() => localStorage.getItem('pazotti_cloud_url') || 'https://script.google.com/macros/s/AKfycbwFOWIgG1Zll3EhcNNFR0apsjSeu5OBKKZ7DewlXHywgc65X6VVZFUnwY5Ixe4Ygv33Bw/exec');
+  const [cloudUrl, setCloudUrl] = useState(() => localStorage.getItem('pazotti_cloud_url') || 'https://script.google.com/macros/s/AKfycbyuftwUYeprNh0b7-gDkErDf7kuWeyjxl_fftn9VnHAvLZ2Q1DNiUKVYX-eXT2id4EMdg/exec');
   const [syncStatus, setSyncStatus] = useState('idle'); // 'idle', 'syncing', 'success', 'error'
 
   // Auth Form State
