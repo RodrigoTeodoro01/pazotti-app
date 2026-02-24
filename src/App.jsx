@@ -269,7 +269,6 @@ function App() {
             <button type="submit" className="btn btn-primary" style={{ marginTop: '1rem' }}><LogIn size={20} /> Entrar</button>
           </form>
           <div style={{ marginTop: '2rem', textAlign: 'center', borderTop: '1px solid var(--border)', paddingTop: '1rem' }}>
-            <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Admin: admin / pazotti123</p>
             <button onClick={handleResetSystem} style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>Limpar Sistema</button>
           </div>
         </div>
