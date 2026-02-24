@@ -165,10 +165,10 @@ function App() {
 
   // Initial Cloud Load
   useEffect(() => {
-    if (currentUser && cloudUrl) {
+    if (cloudUrl) {
       fetchFromCloud();
     }
-  }, [currentUser, cloudUrl, fetchFromCloud]);
+  }, [cloudUrl, fetchFromCloud]);
 
   // Auth Handlers
   const handleLogin = (e) => {
