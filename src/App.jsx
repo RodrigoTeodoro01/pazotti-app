@@ -154,13 +154,22 @@ function App() {
         setSyncStatus('success');
       } else if (data && typeof data === 'object') {
         // Novo formato: { entries: [], users: [] }
-        if (data.entries && data.entries.length > 0) {
-          setEntries(data.entries);
-        } else if (entries.length > 0) {
-          saveToCloud(entries, users); // Alimenta a nuvem se estiver vazia
+
+        // Regra para Verbas: 
+        if (data.entries) {
+          if (data.entries.length > 0) {
+            setEntries(data.entries);
+          } else if (entries.length > 0 && localStorage.getItem('pazotti_cloud_seeded') === 'true') {
+            // Se já foi semeado uma vez e agora está vazio, significa que foi tudo apagado
+            setEntries([]);
+          } else if (entries.length > 0) {
+            // Primeira vez conectando a uma planilha vazia, sobe os dados locais
+            saveToCloud(entries, users);
+            localStorage.setItem('pazotti_cloud_seeded', 'true');
+          }
         }
 
-        if (data.users && Array.isArray(data.users) && data.users.length > 0) {
+        if (data.users && Array.isArray(data.users)) {
           const cloudUsers = data.users;
           if (!cloudUsers.find(u => u.username === 'admin')) {
             cloudUsers.push({ username: 'admin', password: 'pazotti123', role: 'admin' });
@@ -443,8 +452,15 @@ function App() {
                     <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>{e.industria} - {e.vendedor}</p>
                     <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.data} • por {e.responsavel}</p>
                   </div>
-                  <div style={{ fontWeight: 700, color: 'var(--primary)' }}>
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(e.valor)}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(e.valor)}
+                      </div>
+                      <button onClick={() => deleteEntry(e.id)} style={{ color: '#ef4444', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.7rem', display: 'flex', alignItems: 'center', gap: '0.25rem', padding: 0, marginTop: '0.25rem' }}>
+                        <Trash2 size={12} /> Apagar
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
