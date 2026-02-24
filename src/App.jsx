@@ -88,26 +88,31 @@ function App() {
     }
   }, [currentUser]);
 
-  // Cloud Logic
   const saveToCloud = useCallback(async (currentEntries, currentUsers) => {
     if (!cloudUrl) return;
     setSyncStatus('syncing');
     try {
-      // POST logic for Apps Script - now sending entries and users
-      await fetch(cloudUrl, {
+      const payload = {
+        entries: currentEntries || entries,
+        users: currentUsers || users
+      };
+
+      const response = await fetch(cloudUrl, {
         method: 'POST',
         mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify({
-          entries: currentEntries || entries,
-          users: currentUsers || users
-        })
+        body: JSON.stringify(payload)
       });
+
+      // No-cors doesn't allow reading response, but we assume success if no exception
       setSyncStatus('success');
+      localStorage.setItem('pazotti_cloud_seeded', 'true'); // Marca como semeado após sucesso
       setTimeout(() => setSyncStatus('idle'), 3000);
     } catch (error) {
       console.error("Cloud Save Error:", error);
       setSyncStatus('error');
+      // Alerta detalhado para diagnóstico manual
+      alert(`Falha ao salvar na Nuvem: ${error.message}\n\nIsso pode ser problema de permissão no Google Script.`);
     }
   }, [cloudUrl, entries, users]);
 
@@ -148,25 +153,24 @@ function App() {
       if (Array.isArray(data)) {
         if (data.length > 0) {
           setEntries(data);
-        } else if (entries.length > 0) {
-          saveToCloud(entries, users); // Sobe local se nuvem estiver vazia
+          localStorage.setItem('pazotti_cloud_seeded', 'true');
+        } else if (entries.length > 0 && localStorage.getItem('pazotti_cloud_seeded') !== 'true') {
+          saveToCloud(entries, users); // Sobe local se nuvem vazia pela 1ª vez
+        } else if (data.length === 0 && entries.length > 0 && localStorage.getItem('pazotti_cloud_seeded') === 'true') {
+          setEntries([]); // Confirmado que cloud está vazio e já foi semeado
         }
         setSyncStatus('success');
       } else if (data && typeof data === 'object') {
         // Novo formato: { entries: [], users: [] }
 
-        // Regra para Verbas: 
-        if (data.entries) {
-          if (data.entries.length > 0) {
-            setEntries(data.entries);
-          } else if (entries.length > 0 && localStorage.getItem('pazotti_cloud_seeded') === 'true') {
-            // Se já foi semeado uma vez e agora está vazio, significa que foi tudo apagado
-            setEntries([]);
-          } else if (entries.length > 0) {
-            // Primeira vez conectando a uma planilha vazia, sobe os dados locais
-            saveToCloud(entries, users);
-            localStorage.setItem('pazotti_cloud_seeded', 'true');
-          }
+        const cloudEntries = data.entries || [];
+        if (cloudEntries.length > 0) {
+          setEntries(cloudEntries);
+          localStorage.setItem('pazotti_cloud_seeded', 'true');
+        } else if (entries.length > 0 && localStorage.getItem('pazotti_cloud_seeded') !== 'true') {
+          saveToCloud(entries, users); // Semeia
+        } else if (cloudEntries.length === 0 && entries.length > 0 && localStorage.getItem('pazotti_cloud_seeded') === 'true') {
+          setEntries([]); // Reflete que está vazio
         }
 
         if (data.users && Array.isArray(data.users)) {
