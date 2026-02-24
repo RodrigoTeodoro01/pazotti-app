@@ -11,7 +11,9 @@ createRoot(document.getElementById('root')).render(
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').then((reg) => {
+    // Registra o sw.js relativo à pasta do app
+    const swUrl = `${import.meta.env.BASE_URL}sw.js`;
+    navigator.serviceWorker.register(swUrl).then((reg) => {
       console.log('SW Registered!', reg);
     }).catch((err) => {
       console.log('SW Reg failed', err);
