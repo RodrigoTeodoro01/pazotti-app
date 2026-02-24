@@ -145,7 +145,7 @@ function App() {
       } else if (data && typeof data === 'object') {
         // Novo formato: { entries: [], users: [] }
         if (data.entries) setEntries(data.entries);
-        if (data.users && data.users.length > 0) setUsers(data.users);
+        if (data.users) setUsers(data.users); // Sempre atualiza se existir na nuvem
 
         setSyncStatus('success');
         if (isManual) alert("Conexão OK! Verbas e Usuários sincronizados.");
@@ -270,6 +270,13 @@ function App() {
         <div className="glass-card" style={{ maxWidth: '400px', width: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
             <h1 className="title" style={{ fontSize: '1.5rem' }}>Login Pazotti</h1>
+            {cloudUrl && (
+              <p style={{ fontSize: '0.65rem', color: syncStatus === 'error' ? '#ef4444' : 'var(--text-muted)', marginTop: '0.5rem' }}>
+                {syncStatus === 'syncing' ? 'Sincronizando usuários...' :
+                  syncStatus === 'error' ? 'Erro ao carregar usuários da nuvem' :
+                    syncStatus === 'success' ? 'Usuários sincronizados ✓' : ''}
+              </p>
+            )}
           </div>
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div className="input-group">
