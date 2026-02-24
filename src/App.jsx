@@ -81,16 +81,19 @@ function App() {
   }, [currentUser]);
 
   // Cloud Logic
-  const saveToCloud = useCallback(async (currentEntries) => {
+  const saveToCloud = useCallback(async (currentEntries, currentUsers) => {
     if (!cloudUrl) return;
     setSyncStatus('syncing');
     try {
-      // POST logic for Apps Script
+      // POST logic for Apps Script - now sending entries and users
       await fetch(cloudUrl, {
         method: 'POST',
-        mode: 'no-cors', // Essential for Apps Script to avoid preflight
+        mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(currentEntries)
+        body: JSON.stringify({
+          entries: currentEntries || entries,
+          users: currentUsers || users
+        })
       });
       setSyncStatus('success');
       setTimeout(() => setSyncStatus('idle'), 3000);
@@ -98,7 +101,7 @@ function App() {
       console.error("Cloud Save Error:", error);
       setSyncStatus('error');
     }
-  }, [cloudUrl]);
+  }, [cloudUrl, entries, users]);
 
   const fetchFromCloud = useCallback(async (isManual = false) => {
     if (!cloudUrl || !cloudUrl.startsWith('https://')) {
@@ -135,13 +138,21 @@ function App() {
       }
 
       if (Array.isArray(data)) {
+        // Fallback para o formato antigo de array simples
         setEntries(data);
         setSyncStatus('success');
-        if (isManual) alert("Conexão com a Nuvem OK! Dados carregados.");
-        setTimeout(() => setSyncStatus('idle'), 3000);
+        if (isManual) alert("Conexão OK! Dados de Verbas carregados.");
+      } else if (data && typeof data === 'object') {
+        // Novo formato: { entries: [], users: [] }
+        if (data.entries) setEntries(data.entries);
+        if (data.users && data.users.length > 0) setUsers(data.users);
+
+        setSyncStatus('success');
+        if (isManual) alert("Conexão OK! Verbas e Usuários sincronizados.");
       } else {
-        throw new Error("Formato de dados inválido (não é uma lista).");
+        throw new Error("Formato de dados inválido.");
       }
+      setTimeout(() => setSyncStatus('idle'), 3000);
     } catch (error) {
       console.error("Cloud Fetch Error:", error);
       setSyncStatus('error');
@@ -185,14 +196,15 @@ function App() {
     }
   };
 
-  // User Management
   const handleAddUser = (e) => {
     e.preventDefault();
     if (users.find(u => u.username === newUser.username)) {
       alert("Este nome de usuário já existe.");
       return;
     }
-    setUsers(prev => [...prev, newUser]);
+    const updatedUsers = [...users, newUser];
+    setUsers(updatedUsers);
+    saveToCloud(entries, updatedUsers); // Sync users change to cloud
     setNewUser({ username: '', password: '', role: 'usuario' });
     alert("Usuário cadastrado com sucesso!");
   };
@@ -200,7 +212,9 @@ function App() {
   const deleteUser = (username) => {
     if (username === 'admin') return alert("Não é possível excluir o admin mestre.");
     if (window.confirm(`Excluir usuário ${username}?`)) {
-      setUsers(prev => prev.filter(u => u.username !== username));
+      const updatedUsers = users.filter(u => u.username !== username);
+      setUsers(updatedUsers);
+      saveToCloud(entries, updatedUsers); // Sync users change to cloud
     }
   };
 
