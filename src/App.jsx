@@ -252,7 +252,7 @@ function App() {
 
     const updatedEntries = [newEntry, ...entries];
     setEntries(updatedEntries);
-    saveToCloud(updatedEntries); // Auto-sync on add
+    saveToCloud(updatedEntries, users); // Sincroniza ambos
 
     setFormData({ supervisor: '', industria: '', autorizador: '', vendedor: '', valor: '' });
   };
@@ -261,7 +261,7 @@ function App() {
     if (window.confirm("Deseja excluir este lançamento?")) {
       const updatedEntries = entries.filter(entry => entry.id !== id);
       setEntries(updatedEntries);
-      saveToCloud(updatedEntries); // Auto-sync on delete
+      saveToCloud(updatedEntries, users); // Sincroniza ambos
     }
   };
 
