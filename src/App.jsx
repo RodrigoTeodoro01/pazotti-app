@@ -146,16 +146,21 @@ function App() {
       }
 
       if (Array.isArray(data)) {
-        // Fallback para o formato antigo de array simples
-        setEntries(data);
+        if (data.length > 0) {
+          setEntries(data);
+        } else if (entries.length > 0) {
+          saveToCloud(entries, users); // Sobe local se nuvem estiver vazia
+        }
         setSyncStatus('success');
-        if (isManual) alert("Conexão OK! Dados de Verbas carregados.");
       } else if (data && typeof data === 'object') {
         // Novo formato: { entries: [], users: [] }
-        if (data.entries) setEntries(data.entries);
+        if (data.entries && data.entries.length > 0) {
+          setEntries(data.entries);
+        } else if (entries.length > 0) {
+          saveToCloud(entries, users); // Alimenta a nuvem se estiver vazia
+        }
 
         if (data.users && Array.isArray(data.users) && data.users.length > 0) {
-          // Garante que o admin mestre sempre exista
           const cloudUsers = data.users;
           if (!cloudUsers.find(u => u.username === 'admin')) {
             cloudUsers.push({ username: 'admin', password: 'pazotti123', role: 'admin' });
@@ -164,7 +169,7 @@ function App() {
         }
 
         setSyncStatus('success');
-        if (isManual) alert("Conexão OK! Verbas e Usuários sincronizados.");
+        if (isManual) alert("Sincronização concluída!");
       } else {
         throw new Error("Formato de dados inválido.");
       }
