@@ -40,7 +40,15 @@ function App() {
     return [{ username: 'admin', password: 'pazotti123', role: 'admin' }];
   });
 
-  const [cloudUrl, setCloudUrl] = useState(() => localStorage.getItem('pazotti_cloud_url') || 'https://script.google.com/macros/s/AKfycbyuftwUYeprNh0b7-gDkErDf7kuWeyjxl_fftn9VnHAvLZ2Q1DNiUKVYX-eXT2id4EMdg/exec');
+  const [cloudUrl, setCloudUrl] = useState(() => {
+    const saved = localStorage.getItem('pazotti_cloud_url');
+    const NEW_URL = 'https://script.google.com/macros/s/AKfycbyuftwUYeprNh0b7-gDkErDf7kuWeyjxl_fftn9VnHAvLZ2Q1DNiUKVYX-eXT2id4EMdg/exec';
+    const OLD_URL = 'https://script.google.com/macros/s/AKfycbwFOWIgG1Zll3EhcNNFR0apsjSeu5OBKKZ7DewlXHywgc65X6VVZFUnwY5Ixe4Ygv33Bw/exec';
+
+    // Auto-migrate if it's the old default
+    if (saved === OLD_URL) return NEW_URL;
+    return saved || NEW_URL;
+  });
   const [syncStatus, setSyncStatus] = useState('idle'); // 'idle', 'syncing', 'success', 'error'
 
   // Auth Form State
@@ -145,7 +153,15 @@ function App() {
       } else if (data && typeof data === 'object') {
         // Novo formato: { entries: [], users: [] }
         if (data.entries) setEntries(data.entries);
-        if (data.users) setUsers(data.users); // Sempre atualiza se existir na nuvem
+
+        if (data.users && Array.isArray(data.users) && data.users.length > 0) {
+          // Garante que o admin mestre sempre exista
+          const cloudUsers = data.users;
+          if (!cloudUsers.find(u => u.username === 'admin')) {
+            cloudUsers.push({ username: 'admin', password: 'pazotti123', role: 'admin' });
+          }
+          setUsers(cloudUsers);
+        }
 
         setSyncStatus('success');
         if (isManual) alert("Conexão OK! Verbas e Usuários sincronizados.");
